@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The activity theme only styles the window before Compose takes over.
+      Colours inside the app come from MemoraTheme (core/ui/theme/Theme.kt).
+      No AppCompat/Material library is needed: framework Material themes suffice.
+    -->
+    <style name="Theme.Memora" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">Memora</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_add">Add</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_more">More</string>
+
+    <!-- Home -->
+    <string name="home_title">MEMORA</string>
+    <string name="home_tagline">Remember where everything is.</string>
+    <string name="home_search_hint">Search objects, documents, places…</string>
+    <string name="home_search_cd">Open search</string>
+    <string name="home_quick_actions">Quick actions</string>
+    <string name="home_action_add_item">Add item</string>
+    <string name="home_action_add_item_summary">Register a physical object</string>
+    <string name="home_action_save_document">Save document</string>
+    <string name="home_action_save_document_summary">Register a document</string>
+    <string name="home_action_my_storage">My storage</string>
+    <string name="home_action_my_storage_summary">Places and containers</string>
+    <string name="home_action_recent_history">Recent history</string>
+    <string name="home_action_recent_history_summary">Movements and events</string>
+    <string name="home_recent_heading">Recently used</string>
+    <string name="home_recent_empty">Objects you add will appear here.</string>
+
+    <!-- Search -->
+    <string name="search_title">Search</string>
+    <string name="search_input_hint">Search objects, documents, places…</string>
+    <string name="search_pending">Universal search across objects, documents and locations arrives with the database in Phase 2. Your query is not stored yet.</string>
+
+    <!-- Add -->
+    <string name="add_title">Add</string>
+    <string name="add_mode_item">Item</string>
+    <string name="add_mode_document">Document</string>
+    <string name="add_pending_item">Item registration arrives with the database layer (Phases 2–3). Nothing is saved yet.</string>
+    <string name="add_pending_document">Document registration arrives in Phase 5. Nothing is saved yet.</string>
+
+    <!-- Documents -->
+    <string name="documents_title">Documents</string>
+    <string name="documents_pending">Saving and organising documents, scans and physical originals arrives in Phase 5.</string>
+
+    <!-- More -->
+    <string name="more_title">More</string>
+    <string name="more_sections_heading">App sections</string>
+    <string name="more_status_heading">Development status</string>
+    <string name="more_status_body">This build implements Phase 1 only: application foundation, navigation, theme and screens. Storage and data features arrive in later phases. Memora works offline and sends no data anywhere.</string>
+    <string name="more_row_objects">Objects</string>
+    <string name="more_row_objects_summary">All your things, even with duplicate names</string>
+    <string name="more_row_locations">Locations &amp; containers</string>
+    <string name="more_row_locations_summary">Rooms, cupboards, boxes and their contents</string>
+    <string name="more_row_history">History</string>
+    <string name="more_row_history_summary">Movement and event timeline</string>
+    <string name="more_row_products">Products &amp; warranties</string>
+    <string name="more_row_products_summary">Purchases, invoices, repairs</string>
+    <string name="more_row_reminders">Reminders</string>
+    <string name="more_row_reminders_summary">Optional, always user-controlled</string>
+    <string name="more_row_backup">Backup &amp; restore</string>
+    <string name="more_row_backup_summary">Local, offline backups</string>
+    <string name="more_row_settings">Settings</string>
+    <string name="more_row_settings_summary">Preferences and privacy</string>
+
+    <!-- Section placeholder screens -->
+    <string name="objects_title">Objects</string>
+    <string name="objects_pending">Object tracking arrives in Phase 3. Every physical object gets its own internal ID, so several things can share the same name — three separate “Car key” records stay three separate records.</string>
+    <string name="locations_title">Locations &amp; containers</string>
+    <string name="locations_pending">The location hierarchy (rooms, cupboards, boxes) and container contents arrive in Phase 3.</string>
+    <string name="history_title">History</string>
+    <string name="history_pending">Movement and event history arrives in Phase 4, including both when something moved and when Memora learned about it.</string>
+    <string name="products_title">Products &amp; warranties</string>
+    <string name="products_pending">Product, purchase, warranty and repair tracking arrives in Phase 6.</string>
+    <string name="reminders_title">Reminders</string>
+    <string name="reminders_pending">Optional reminders arrive after the database foundation (Phase 2). They use scheduled one-shot work — never a continuously running service — and can be switched off.</string>
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_pending">Local backup and restore (with duplicate-safe import) arrives in Phase 9.</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_pending">App preferences arrive with Phase 2.</string>
+</resources>
