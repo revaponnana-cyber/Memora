@@ -1,6 +1,5 @@
 package com.memora.app.feature.add
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,122 +7,150 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.memora.app.R
-import com.memora.app.core.ui.theme.MemoraTheme
 import com.memora.app.domain.model.AddMode
 
+object AddTestTags {
+    const val NAME_INPUT = "add_name_input"
+    const val PLACE_INPUT = "add_place_input"
+    const val SAVE_BUTTON = "add_save_button"
+}
+
 /**
- * Add screen: register a new item or document.
- *
- * Phase 1 provides the mode selection (Item / Document) via MVVM; the actual
- * registration forms arrive with the database layer (Phases 2–3 for items,
- * Phase 5 for documents). The screen states this honestly — nothing is
- * silently discarded and nothing is saved yet.
+ * Manual add screen. Items can be registered here with a name and (nested)
+ * place ("drawer in bedroom"); the faster path is the sentence input on Home.
+ * Documents are a later phase and say so honestly.
  */
 @Composable
 fun AddScreen(
     modifier: Modifier = Modifier,
     viewModel: AddViewModel = viewModel(),
+    onSaved: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    AddContent(
-        state = state,
-        onModeSelected = viewModel::onModeSelected,
-        modifier = modifier,
-    )
-}
 
-@Composable
-private fun AddContent(
-    state: AddUiState,
-    onModeSelected: (AddMode) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            viewModel.onSavedHandled()
+            onSaved()
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center,
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.add_title),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.primary,
         )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        TabRow(selectedTabIndex = state.mode.ordinal) {
+            AddMode.entries.forEach { mode ->
+                Tab(
+                    selected = state.mode == mode,
+                    onClick = { viewModel.onModeSelected(mode) },
+                    text = {
+                        Text(
+                            stringResource(
+                                when (mode) {
+                                    AddMode.ITEM -> R.string.add_mode_item
+                                    AddMode.DOCUMENT -> R.string.add_mode_document
+                                },
+                            ),
+                        )
+                    },
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ModeButton(
-                label = stringResource(R.string.add_mode_item),
-                selected = state.mode == AddMode.ITEM,
-                onClick = { onModeSelected(AddMode.ITEM) },
-                modifier = Modifier.weight(1f),
-            )
-            ModeButton(
-                label = stringResource(R.string.add_mode_document),
-                selected = state.mode == AddMode.DOCUMENT,
-                onClick = { onModeSelected(AddMode.DOCUMENT) },
-                modifier = Modifier.weight(1f),
+        when (state.mode) {
+            AddMode.ITEM -> ItemForm(state = state, viewModel = viewModel)
+            AddMode.DOCUMENT -> Text(
+                text = stringResource(R.string.add_pending_document),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(
-                if (state.mode == AddMode.ITEM) {
-                    R.string.add_pending_item
-                } else {
-                    R.string.add_pending_document
-                },
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        state.message?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun ModeButton(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun ItemForm(
+    state: AddUiState,
+    viewModel: AddViewModel,
 ) {
-    if (selected) {
-        Button(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-            Text(label)
+    Column {
+        OutlinedTextField(
+            value = state.name,
+            onValueChange = viewModel::onNameChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AddTestTags.NAME_INPUT),
+            label = { Text(stringResource(R.string.add_name_label)) },
+            placeholder = { Text(stringResource(R.string.add_name_hint)) },
+            singleLine = true,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.description,
+            onValueChange = viewModel::onDescriptionChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.add_description_label)) },
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.place,
+            onValueChange = viewModel::onPlaceChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AddTestTags.PLACE_INPUT),
+            label = { Text(stringResource(R.string.add_place_label)) },
+            placeholder = { Text(stringResource(R.string.add_place_hint)) },
+            singleLine = true,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            Button(
+                onClick = viewModel::onSave,
+                enabled = state.canSave,
+                modifier = Modifier.testTag(AddTestTags.SAVE_BUTTON),
+            ) {
+                Text(stringResource(R.string.add_save))
+            }
         }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-            Text(label)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AddContentItemPreview() {
-    MemoraTheme {
-        AddContent(state = AddUiState(mode = AddMode.ITEM), onModeSelected = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AddContentDocumentPreview() {
-    MemoraTheme {
-        AddContent(state = AddUiState(mode = AddMode.DOCUMENT), onModeSelected = {})
     }
 }

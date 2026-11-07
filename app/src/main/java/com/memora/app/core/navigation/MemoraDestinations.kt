@@ -54,6 +54,15 @@ sealed interface MemoraDestination {
     // Secondary destinations (section screens)
     // ------------------------------------------------------------------
 
+    data object ItemDetail : MemoraDestination {
+        const val ITEM_ID_ARG: String = "itemId"
+
+        override val route: String = "item/{$ITEM_ID_ARG}"
+
+        /** Route to open the detail/history screen of one specific item. */
+        fun routeFor(itemId: String): String = "item/$itemId"
+    }
+
     data object Objects : MemoraDestination {
         override val route: String = "objects"
     }
@@ -94,6 +103,7 @@ val TopLevelDestinations: List<MemoraDestination> = listOf(
 
 /** Every destination of the app; kept for route-integrity tests. */
 val AllDestinations: List<MemoraDestination> = TopLevelDestinations + listOf(
+    MemoraDestination.ItemDetail,
     MemoraDestination.Objects,
     MemoraDestination.Locations,
     MemoraDestination.History,

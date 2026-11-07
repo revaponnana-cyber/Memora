@@ -75,4 +75,50 @@
     <string name="backup_pending">Local backup and restore (with duplicate-safe import) arrives in Phase 9.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_pending">App preferences arrive with Phase 2.</string>
+
+    <!-- Sentence agent + items list (Home) -->
+    <string name="home_sentence_label">Tell Memora</string>
+    <string name="home_sentence_hint">What did you do? e.g. I put my car keys in my drawer in bedroom</string>
+    <string name="home_send">Record</string>
+    <string name="home_undo">Undo</string>
+    <string name="home_my_items">My items</string>
+    <string name="home_items_empty">No items yet. Tell Memora where you put something.</string>
+
+    <!-- Ambiguity: several objects share the name (assignment 2.5) -->
+    <string name="ambiguity_title">Which one did you mean?</string>
+    <string name="ambiguity_body">Several objects share that name. Pick the right one — or add a new object.</string>
+    <string name="ambiguity_add_new">None of these — add as new</string>
+    <string name="ambiguity_cancel">Cancel</string>
+
+    <!-- Uncertainty: guesses are confirmed before they become facts -->
+    <string name="uncertainty_title">You sound unsure</string>
+    <string name="uncertainty_body">Record this anyway? It can be corrected later and the history is preserved.</string>
+    <string name="uncertainty_record_uncertain">Record as uncertain</string>
+    <string name="uncertainty_record_confirmed">Record as confirmed</string>
+    <string name="uncertainty_cancel">Cancel</string>
+
+    <!-- Item detail: current location + past addresses -->
+    <string name="detail_title">Item</string>
+    <string name="detail_missing">This item no longer exists.</string>
+    <string name="detail_current_title">Current location</string>
+    <string name="detail_unknown">Location unknown</string>
+    <string name="detail_since">Since %s</string>
+    <string name="detail_move">Move…</string>
+    <string name="detail_move_title">Where is it now?</string>
+    <string name="detail_move_hint">e.g. drawer in bedroom</string>
+    <string name="detail_move_confirm">Move</string>
+    <string name="detail_past_title">Previous places</string>
+    <string name="detail_no_past">No previous places yet.</string>
+    <string name="common_back">Back</string>
+
+    <!-- Manual add -->
+    <string name="add_name_label">Item name</string>
+    <string name="add_name_hint">e.g. Car key</string>
+    <string name="add_description_label">Description (optional)</string>
+    <string name="add_place_label">Where is it? (optional)</string>
+    <string name="add_place_hint">e.g. drawer in bedroom</string>
+    <string name="add_save">Save</string>
+
+    <!-- Search -->
+    <string name="search_no_results">No matching items.</string>
 </resources>

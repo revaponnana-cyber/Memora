@@ -69,6 +69,13 @@ class MemoraDestinationsTest {
     }
 
     @Test
+    fun `item detail routes carry the item id`() {
+        assertEquals("item/{itemId}", MemoraDestination.ItemDetail.route)
+        assertEquals("itemId", MemoraDestination.ItemDetail.ITEM_ID_ARG)
+        assertEquals("item/abc-123", MemoraDestination.ItemDetail.routeFor("abc-123"))
+    }
+
+    @Test
     fun `every destination has a non-blank route`() {
         AllDestinations.forEach { destination ->
             assertTrue(

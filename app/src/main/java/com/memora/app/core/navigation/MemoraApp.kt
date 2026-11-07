@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,9 +29,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.memora.app.R
+import com.memora.app.app.AppContainer
+import com.memora.app.app.MemoraApplication
+import com.memora.app.app.MemoraViewModelFactory
 import com.memora.app.core.common.PlaceholderScreen
 import com.memora.app.domain.model.AddMode
 import com.memora.app.feature.add.AddScreen
+import com.memora.app.feature.detail.ItemDetailScreen
 import com.memora.app.feature.documents.DocumentsScreen
 import com.memora.app.feature.home.HomeScreen
 import com.memora.app.feature.more.MoreScreen
@@ -44,6 +50,8 @@ fun MemoraApp() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val app = LocalContext.current.applicationContext as MemoraApplication
+    val container = app.container
 
     Scaffold(
         bottomBar = {
@@ -55,6 +63,7 @@ fun MemoraApp() {
     ) { innerPadding ->
         MemoraNavHost(
             navController = navController,
+            container = container,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -100,6 +109,7 @@ private fun NavHostController.navigateToTopLevel(destination: MemoraDestination)
 @Composable
 private fun MemoraNavHost(
     navController: NavHostController,
+    container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -109,23 +119,19 @@ private fun MemoraNavHost(
     ) {
         composable(MemoraDestination.Home.route) {
             HomeScreen(
-                onSearchClick = { navController.navigateToTopLevel(MemoraDestination.Search) },
-                onAddItem = {
-                    navController.navigateToTopLevel(MemoraDestination.Add)
+                onOpenItem = { itemId ->
+                    navController.navigate(MemoraDestination.ItemDetail.routeFor(itemId))
                 },
-                onSaveDocument = {
-                    navController.navigate(MemoraDestination.Add.routeFor(AddMode.DOCUMENT)) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onMyStorage = { navController.navigate(MemoraDestination.Locations.route) },
-                onRecentHistory = { navController.navigate(MemoraDestination.History.route) },
+                viewModel = viewModel(factory = MemoraViewModelFactory(container)),
             )
         }
         composable(MemoraDestination.Search.route) {
-            SearchScreen()
+            SearchScreen(
+                onOpenItem = { itemId ->
+                    navController.navigate(MemoraDestination.ItemDetail.routeFor(itemId))
+                },
+                viewModel = viewModel(factory = MemoraViewModelFactory(container)),
+            )
         }
         composable(
             route = MemoraDestination.Add.route,
@@ -135,8 +141,14 @@ private fun MemoraNavHost(
                     defaultValue = AddMode.ITEM.name
                 },
             ),
-        ) {
-            AddScreen()
+        ) { entry ->
+            val mode = entry.arguments?.getString(MemoraDestination.Add.MODE_ARG)
+                ?.let { raw -> AddMode.entries.firstOrNull { it.name == raw } }
+                ?: AddMode.ITEM
+            AddScreen(
+                viewModel = viewModel(factory = MemoraViewModelFactory(container, addMode = mode)),
+                onSaved = { navController.popBackStack() },
+            )
         }
         composable(MemoraDestination.Documents.route) {
             DocumentsScreen()
@@ -144,6 +156,26 @@ private fun MemoraNavHost(
         composable(MemoraDestination.More.route) {
             MoreScreen(
                 onOpenSection = { route -> navController.navigate(route) },
+            )
+        }
+
+        // Item detail: current location highlighted, past addresses below.
+        composable(
+            route = MemoraDestination.ItemDetail.route,
+            arguments = listOf(
+                navArgument(MemoraDestination.ItemDetail.ITEM_ID_ARG) {
+                    type = NavType.StringType
+                },
+            ),
+        ) { entry ->
+            val itemId = entry.arguments
+                ?.getString(MemoraDestination.ItemDetail.ITEM_ID_ARG)
+                .orEmpty()
+            ItemDetailScreen(
+                onBack = { navController.popBackStack() },
+                viewModel = viewModel(
+                    factory = MemoraViewModelFactory(container, itemId = itemId),
+                ),
             )
         }
 

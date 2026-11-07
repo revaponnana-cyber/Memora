@@ -94,6 +94,13 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
+      - name: Upload Room schema JSONs
+        uses: actions/upload-artifact@v7
+        with:
+          name: room-schemas
+          path: app/schemas/
+          if-no-files-found: warn
+
       - name: Upload unit test reports
         if: failure()
         uses: actions/upload-artifact@v7

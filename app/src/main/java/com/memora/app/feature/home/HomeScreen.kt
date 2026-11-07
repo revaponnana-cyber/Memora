@@ -1,6 +1,5 @@
 package com.memora.app.feature.home
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,205 +9,258 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.memora.app.R
-import com.memora.app.core.ui.theme.MemoraTheme
+import com.memora.app.domain.model.ItemSummary
+
+object HomeTestTags {
+    const val SENTENCE_INPUT = "sentence_input"
+    const val SENTENCE_SEND = "sentence_send"
+    const val ITEM_LIST = "item_list"
+    const val ITEM_ROW = "item_row"
+}
 
 /**
- * Home screen: universal search entry, quick actions and recently used objects.
+ * Home screen — the main screen of Memora.
  *
- * Every element here performs real navigation; nothing is a dead button.
- * Data lists (recent objects, suggestions) appear once the database lands
- * (Phases 2–3) — until then they show an honest empty state.
+ * Top: one sentence input ("I put my car keys in my drawer in bedroom").
+ * Submitting records the item; no "Add" button is required.
+ * Below: the items list. Tapping an item opens its location history.
+ * Ambiguity (several same-named objects) and uncertainty (guesses) are
+ * resolved with explicit dialogs — never by guesswork.
  */
 @Composable
 fun HomeScreen(
-    onSearchClick: () -> Unit,
-    onAddItem: () -> Unit,
-    onSaveDocument: () -> Unit,
-    onMyStorage: () -> Unit,
-    onRecentHistory: () -> Unit,
+    onOpenItem: (String) -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = viewModel(),
 ) {
+    val items by viewModel.items.collectAsStateWithLifecycle()
+    val event by viewModel.event.collectAsStateWithLifecycle()
+    val ambiguity by viewModel.ambiguity.collectAsStateWithLifecycle()
+    val uncertainty by viewModel.uncertainty.collectAsStateWithLifecycle()
+
+    var sentence by rememberSaveable { mutableStateOf("") }
+
+    val submit = {
+        val text = sentence
+        if (text.isNotBlank()) {
+            viewModel.onSentenceSubmit(text)
+            sentence = ""
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = stringResource(R.string.home_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.primary,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = stringResource(R.string.home_tagline),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        SearchBarButton(onClick = onSearchClick)
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.home_quick_actions),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+        OutlinedTextField(
+            value = sentence,
+            onValueChange = { sentence = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(HomeTestTags.SENTENCE_INPUT),
+            label = { Text(stringResource(R.string.home_sentence_label)) },
+            placeholder = { Text(stringResource(R.string.home_sentence_hint)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = { submit() }),
+            trailingIcon = {
+                IconButton(
+                    onClick = { submit() },
+                    modifier = Modifier.testTag(HomeTestTags.SENTENCE_SEND),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Send,
+                        contentDescription = stringResource(R.string.home_send),
+                    )
+                }
+            },
         )
-        Spacer(modifier = Modifier.height(12.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(
-                title = stringResource(R.string.home_action_add_item),
-                summary = stringResource(R.string.home_action_add_item_summary),
-                onClick = onAddItem,
-                modifier = Modifier.weight(1f),
-            )
-            QuickActionCard(
-                title = stringResource(R.string.home_action_save_document),
-                summary = stringResource(R.string.home_action_save_document_summary),
-                onClick = onSaveDocument,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(
-                title = stringResource(R.string.home_action_my_storage),
-                summary = stringResource(R.string.home_action_my_storage_summary),
-                onClick = onMyStorage,
-                modifier = Modifier.weight(1f),
-            )
-            QuickActionCard(
-                title = stringResource(R.string.home_action_recent_history),
-                summary = stringResource(R.string.home_action_recent_history_summary),
-                onClick = onRecentHistory,
-                modifier = Modifier.weight(1f),
-            )
+        event?.let { current ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                val text = when (current) {
+                    is HomeEvent.Saved -> current.message
+                    is HomeEvent.Info -> current.message
+                    is HomeEvent.Answer -> current.text
+                }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("feedback_text"),
+                )
+                if (current is HomeEvent.Saved && current.undo != null) {
+                    TextButton(onClick = { viewModel.onUndo(current.undo) }) {
+                        Text(stringResource(R.string.home_undo))
+                    }
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.home_recent_heading),
+            text = stringResource(R.string.home_my_items),
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.home_recent_empty),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+        if (items.isEmpty()) {
+            Text(
+                text = stringResource(R.string.home_items_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(HomeTestTags.ITEM_LIST),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(items = items, key = { it.id }) { item ->
+                    ItemRow(item = item, onClick = { onOpenItem(item.id) })
+                }
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+            }
+        }
+    }
+
+    ambiguity?.let { request ->
+        AlertDialog(
+            onDismissRequest = { viewModel.onAmbiguityDismissed() },
+            title = { Text(stringResource(R.string.ambiguity_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.ambiguity_body))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    request.candidates.forEach { candidate ->
+                        TextButton(
+                            onClick = { viewModel.onCandidateChosen(candidate.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            val where = candidate.currentPathDisplay ?: "—"
+                            Text("${candidate.name} — $where")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onCandidateChosen(null) }) {
+                    Text(stringResource(R.string.ambiguity_add_new))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAmbiguityDismissed() }) {
+                    Text(stringResource(R.string.ambiguity_cancel))
+                }
+            },
         )
-        Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    uncertainty?.let { request ->
+        AlertDialog(
+            onDismissRequest = { viewModel.onUncertaintyAnswer(null) },
+            title = { Text(stringResource(R.string.uncertainty_title)) },
+            text = {
+                Text(stringResource(R.string.uncertainty_body))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = request.statement.raw,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { viewModel.onUncertaintyAnswer(false) }) {
+                        Text(stringResource(R.string.uncertainty_record_uncertain))
+                    }
+                    TextButton(onClick = { viewModel.onUncertaintyAnswer(true) }) {
+                        Text(stringResource(R.string.uncertainty_record_confirmed))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onUncertaintyAnswer(null) }) {
+                    Text(stringResource(R.string.uncertainty_cancel))
+                }
+            },
+        )
     }
 }
 
-/**
- * Search entry styled like a search bar. Tapping it opens the Search tab —
- * the real input field lives there.
- */
 @Composable
-private fun SearchBarButton(onClick: () -> Unit) {
-    Surface(
+private fun ItemRow(
+    item: ItemSummary,
+    onClick: () -> Unit,
+) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+            .clickable(onClick = onClick)
+            .testTag(HomeTestTags.ITEM_ROW),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = stringResource(R.string.home_search_cd),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
-                text = stringResource(R.string.home_search_hint),
-                style = MaterialTheme.typography.bodyLarge,
+                text = item.name,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = item.currentPath?.display()
+                    ?: "—",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    title: String,
-    summary: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        ),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    MemoraTheme {
-        HomeScreen(
-            onSearchClick = {},
-            onAddItem = {},
-            onSaveDocument = {},
-            onMyStorage = {},
-            onRecentHistory = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun HomeScreenDarkPreview() {
-    MemoraTheme {
-        HomeScreen(
-            onSearchClick = {},
-            onAddItem = {},
-            onSaveDocument = {},
-            onMyStorage = {},
-            onRecentHistory = {},
-        )
     }
 }
