@@ -47,7 +47,7 @@ class NavigationSmokeTest {
     @Test
     fun moreTabListsSections() {
         composeRule.onNodeWithText("More").performClick()
-        composeRule.onNodeWithText("App sections").assertIsDisplayed()
-        composeRule.onNodeWithText("Development status").assertIsDisplayed()
+        composeRule.onNodeWithText("App sections").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Development status").performScrollTo().assertIsDisplayed()
     }
 }

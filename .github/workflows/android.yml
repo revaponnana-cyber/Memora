@@ -178,6 +178,7 @@ jobs:
           fi
           find app/build/outputs/androidTest-results -name "*.xml" 2>/dev/null | while IFS= read -r f; do
             grep -o 'message="[^"]*"' "$f" | head -8 | while IFS= read -r m; do echo "::error::test $m"; done
+            grep -o "NavigationSmokeTest.kt:[0-9]*" "$f" | head -3 | sed "s/^/::error::at /"
           done
           grep -E "FAILED|AssertionError|No connected devices|Exception" connected-test.log 2>/dev/null | head -8 | while IFS= read -r l; do echo "::error::$l"; done
           true
