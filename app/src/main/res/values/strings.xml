@@ -42,7 +42,6 @@
     <string name="documents_pending">Saving and organising documents, scans and physical originals arrives in Phase 5.</string>
 
     <!-- More -->
-    <string name="more_title">More</string>
     <string name="more_sections_heading">App sections</string>
     <string name="more_status_heading">Development status</string>
     <string name="more_status_body">This build implements Phase 1 only: application foundation, navigation, theme and screens. Storage and data features arrive in later phases. Memora works offline and sends no data anywhere.</string>
