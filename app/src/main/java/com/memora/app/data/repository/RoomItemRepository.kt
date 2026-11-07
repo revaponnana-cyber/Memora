@@ -61,9 +61,10 @@ class RoomItemRepository(
         return toSummary(obj, byId)
     }
 
-    override suspend fun findCandidates(matchKey: String): List<ObjectCandidate> =
-        objects.getByMatchKey(matchKey).map { obj ->
-            val path = obj.currentLocationId?.let { pathOf(it, allLocationsById()) }
+    override suspend fun findCandidates(matchKey: String): List<ObjectCandidate> {
+        val byId = allLocationsById()
+        return objects.getByMatchKey(matchKey).map { obj ->
+            val path = obj.currentLocationId?.let { pathOf(it, byId) }
             ObjectCandidate(
                 id = obj.id,
                 name = obj.canonicalName,
@@ -71,6 +72,7 @@ class RoomItemRepository(
                 currentPathDisplay = path?.display(),
             )
         }
+    }
 
     override suspend fun findPlace(chain: List<String>): PlacePath? {
         if (chain.isEmpty()) return null
@@ -187,7 +189,8 @@ class RoomItemRepository(
             return@withTransaction MoveOutcome.Unchanged(obj.toDomain(), place)
         }
 
-        val previousPath = obj.currentLocationId?.let { pathOf(it, allLocationsById()) }
+        val byId = allLocationsById()
+        val previousPath = obj.currentLocationId?.let { pathOf(it, byId) }
         events.insert(
             LocationEventEntity(
                 id = UUID.randomUUID().toString(),
@@ -206,7 +209,7 @@ class RoomItemRepository(
         )
         objects.updateCurrentLocation(itemId, place.leafId, System.currentTimeMillis())
         MoveOutcome.Moved(
-            item = obj.copy(currentLocationId = place.leafId, updatedAt = System.currentTimeMillis()),
+            item = obj.copy(currentLocationId = place.leafId, updatedAt = System.currentTimeMillis()).toDomain(),
             path = place,
             previousLocationId = obj.currentLocationId,
             previousPathDisplay = previousPath?.display(),
@@ -222,10 +225,14 @@ class RoomItemRepository(
         sentence: String?,
     ): MoveOutcome = database.withTransaction {
         val obj = objects.getById(itemId) ?: return@withTransaction MoveOutcome.NotFound
+        val byId = allLocationsById()
         if (obj.currentLocationId == locationId) {
-            return@withTransaction MoveOutcome.Unchanged(obj.toDomain(), locationId?.let { pathOf(it, allLocationsById()) })
+            return@withTransaction MoveOutcome.Unchanged(
+                obj.toDomain(),
+                locationId?.let { pathOf(it, byId) },
+            )
         }
-        val previousPath = obj.currentLocationId?.let { pathOf(it, allLocationsById()) }
+        val previousPath = obj.currentLocationId?.let { pathOf(it, byId) }
         events.insert(
             LocationEventEntity(
                 id = UUID.randomUUID().toString(),
@@ -244,8 +251,8 @@ class RoomItemRepository(
         )
         objects.updateCurrentLocation(itemId, locationId, System.currentTimeMillis())
         MoveOutcome.Moved(
-            item = obj.copy(currentLocationId = locationId, updatedAt = System.currentTimeMillis()),
-            path = locationId?.let { pathOf(it, allLocationsById()) },
+            item = obj.copy(currentLocationId = locationId, updatedAt = System.currentTimeMillis()).toDomain(),
+            path = locationId?.let { pathOf(it, byId) },
             previousLocationId = obj.currentLocationId,
             previousPathDisplay = previousPath?.display(),
         )

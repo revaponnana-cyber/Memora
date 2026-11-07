@@ -34,13 +34,23 @@ abstract class MemoraDatabase : RoomDatabase() {
         @Volatile
         private var instance: MemoraDatabase? = null
 
-        fun get(context: Context): MemoraDatabase =
-            instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    MemoraDatabase::class.java,
-                    "memora.db",
-                ).build().also { instance = it }
+        fun get(context: Context): MemoraDatabase {
+            val existing = instance
+            if (existing != null) return existing
+            return synchronized(this) {
+                val again = instance
+                if (again != null) {
+                    again
+                } else {
+                    val created = Room.databaseBuilder(
+                        context.applicationContext,
+                        MemoraDatabase::class.java,
+                        "memora.db",
+                    ).build()
+                    instance = created
+                    created
+                }
             }
+        }
     }
 }

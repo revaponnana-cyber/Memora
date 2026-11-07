@@ -81,7 +81,8 @@ fun ItemDetailScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (detail == null) {
+        val current = detail
+        if (current == null) {
             Text(
                 text = stringResource(R.string.detail_missing),
                 style = MaterialTheme.typography.bodyMedium,
@@ -91,7 +92,7 @@ fun ItemDetailScreen(
         }
 
         ItemDetailContent(
-            detail = detail!!,
+            detail = current,
             onMoveClick = { moveDialogOpen = true },
         )
 

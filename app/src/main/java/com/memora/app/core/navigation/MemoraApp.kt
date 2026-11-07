@@ -142,9 +142,8 @@ private fun MemoraNavHost(
                 },
             ),
         ) { entry ->
-            val mode = entry.arguments?.getString(MemoraDestination.Add.MODE_ARG)
-                ?.let { raw -> AddMode.entries.firstOrNull { it.name == raw } }
-                ?: AddMode.ITEM
+            val modeName = entry.arguments?.getString(MemoraDestination.Add.MODE_ARG)
+            val mode = AddMode.entries.firstOrNull { it.name == modeName } ?: AddMode.ITEM
             AddScreen(
                 viewModel = viewModel(factory = MemoraViewModelFactory(container, addMode = mode)),
                 onSaved = { navController.popBackStack() },

@@ -129,6 +129,8 @@ fun HomeScreen(
                     is HomeEvent.Saved -> current.message
                     is HomeEvent.Info -> current.message
                     is HomeEvent.Answer -> current.text
+                    // HomeEvent is sealed with exactly the three cases above.
+                    else -> current.toString()
                 }
                 Text(
                     text = text,
