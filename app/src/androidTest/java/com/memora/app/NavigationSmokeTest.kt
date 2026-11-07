@@ -1,10 +1,14 @@
 package com.memora.app
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.memora.app.app.MainActivity
 import org.junit.Rule
@@ -47,7 +51,13 @@ class NavigationSmokeTest {
     @Test
     fun moreTabListsSections() {
         composeRule.onNodeWithText("More").performClick()
-        composeRule.onNodeWithText("App sections").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Development status").performScrollTo().assertIsDisplayed()
+        // Stage 1: the tab must become selected (navigation works).
+        composeRule.onNodeWithText("More").assertIsSelected()
+        // Stage 2: section list content near the top is visible.
+        composeRule.onNodeWithText("App sections").assertIsDisplayed()
+        composeRule.onNodeWithText("Objects").assertIsDisplayed()
+        // Stage 3: scrolling the LazyColumn reveals content below the fold.
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Development status"))
+        composeRule.onNodeWithText("Development status").assertIsDisplayed()
     }
 }
