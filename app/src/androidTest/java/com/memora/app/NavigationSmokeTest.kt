@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.memora.app.app.MainActivity
 import org.junit.Rule
@@ -31,7 +32,7 @@ class NavigationSmokeTest {
 
     @Test
     fun homeQuickActionOpensAddScreen() {
-        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Add item").performScrollTo().performClick()
         // The Add screen shows its mode selector.
         composeRule.onNodeWithText("Item").assertIsDisplayed()
         composeRule.onNodeWithText("Document").assertIsDisplayed()
@@ -39,7 +40,7 @@ class NavigationSmokeTest {
 
     @Test
     fun saveDocumentQuickActionOpensAddScreenInDocumentMode() {
-        composeRule.onNodeWithText("Save document").performClick()
+        composeRule.onNodeWithText("Save document").performScrollTo().performClick()
         composeRule.onNodeWithText("Document").assertIsDisplayed()
     }
 

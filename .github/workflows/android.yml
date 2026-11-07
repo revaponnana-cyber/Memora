@@ -78,6 +78,15 @@ jobs:
       - name: Run unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace
 
+      - name: Compile instrumented tests
+        run: |
+          if ! ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1; then
+            echo "::error::androidTest compilation failed"
+            grep -E "^e: " compile-androidtest.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          fi
+          echo "::notice::Instrumented test sources compiled OK"
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v7
         with:
@@ -149,7 +158,25 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            echo "::notice::Phase 1: compile instrumented tests"
+            if ! ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1; then
+              echo "::error::androidTest compilation failed"
+              grep -E "^e: " compile-androidtest.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+              exit 1
+            fi
+            echo "::notice::Phase 2: device check"
+            adb devices
+            echo "::notice::Phase 3: run connectedDebugAndroidTest"
+            if ! ./gradlew :app:connectedDebugAndroidTest --stacktrace > connected-test.log 2>&1; then
+              echo "::error::connectedDebugAndroidTest failed"
+              grep -E "FAILED|AssertionError|Exception|No connected devices" connected-test.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+              find app/build/outputs/androidTest-results -name "*.xml" 2>/dev/null | while IFS= read -r f; do
+                grep -o 'message="[^"]*"' "$f" | head -6 | while IFS= read -r m; do echo "::error::test $m"; done
+              done
+              exit 1
+            fi
+            echo "::notice::All instrumented tests passed"
 
       - name: Upload instrumented test reports
         if: failure()
