@@ -158,25 +158,29 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
+          # NOTE: the action splits this input by newlines and runs each line
+          # as an independent sh -c command. Keep one command per line and
+          # only single-line shell constructs here.
           script: |
             echo "::notice::Phase 1: compile instrumented tests"
-            if ! ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1; then
-              echo "::error::androidTest compilation failed"
-              grep -E "^e: |Could not find|Could not resolve|Execution failed|What went wrong" compile-androidtest.log | head -10 | while IFS= read -r l; do echo "::error::$l"; done
-              exit 1
-            fi
-            echo "::notice::Phase 2: device check"
+            ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1 || { echo "::error::androidTest compilation failed"; grep -E "^e: |Could not find|Could not resolve|What went wrong" compile-androidtest.log | head -8 | sed "s/^/::error::/"; exit 1; }
+            echo "::notice::Phase 2: run connectedDebugAndroidTest"
             adb devices
-            echo "::notice::Phase 3: run connectedDebugAndroidTest"
-            if ! ./gradlew :app:connectedDebugAndroidTest --stacktrace > connected-test.log 2>&1; then
-              echo "::error::connectedDebugAndroidTest failed"
-              grep -E "FAILED|AssertionError|Exception|No connected devices" connected-test.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
-              find app/build/outputs/androidTest-results -name "*.xml" 2>/dev/null | while IFS= read -r f; do
-                grep -o 'message="[^"]*"' "$f" | head -6 | while IFS= read -r m; do echo "::error::test $m"; done
-              done
-              exit 1
-            fi
+            ./gradlew :app:connectedDebugAndroidTest --stacktrace > connected-test.log 2>&1 || { echo "::error::connectedDebugAndroidTest failed"; grep -E "FAILED|AssertionError|Exception|No connected devices" connected-test.log | head -8 | sed "s/^/::error::/"; exit 1; }
             echo "::notice::All instrumented tests passed"
+
+      - name: Extract instrumented test diagnostics
+        if: failure()
+        run: |
+          echo "::notice::Diagnostics from instrumented run"
+          if [ ! -d app/build/outputs/androidTest-results ]; then
+            echo "::notice::No androidTest-results directory — tests likely did not start"
+          fi
+          find app/build/outputs/androidTest-results -name "*.xml" 2>/dev/null | while IFS= read -r f; do
+            grep -o 'message="[^"]*"' "$f" | head -8 | while IFS= read -r m; do echo "::error::test $m"; done
+          done
+          grep -E "FAILED|AssertionError|No connected devices|Exception" connected-test.log 2>/dev/null | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+          true
 
       - name: Upload instrumented test reports
         if: failure()
