@@ -82,7 +82,7 @@ jobs:
         run: |
           if ! ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1; then
             echo "::error::androidTest compilation failed"
-            grep -E "^e: " compile-androidtest.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+            grep -E "^e: |Could not find|Could not resolve|Execution failed|What went wrong" compile-androidtest.log | head -10 | while IFS= read -r l; do echo "::error::$l"; done
             exit 1
           fi
           echo "::notice::Instrumented test sources compiled OK"
@@ -162,7 +162,7 @@ jobs:
             echo "::notice::Phase 1: compile instrumented tests"
             if ! ./gradlew :app:assembleDebugAndroidTest --stacktrace > compile-androidtest.log 2>&1; then
               echo "::error::androidTest compilation failed"
-              grep -E "^e: " compile-androidtest.log | head -8 | while IFS= read -r l; do echo "::error::$l"; done
+              grep -E "^e: |Could not find|Could not resolve|Execution failed|What went wrong" compile-androidtest.log | head -10 | while IFS= read -r l; do echo "::error::$l"; done
               exit 1
             fi
             echo "::notice::Phase 2: device check"

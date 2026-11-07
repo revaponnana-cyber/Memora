@@ -67,6 +67,10 @@ dependencies {
 
     testImplementation(libs.junit)
 
+    // The Compose BOM must also be added to androidTestImplementation:
+    // androidTest configurations do not inherit version constraints from
+    // implementation.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
